@@ -21,10 +21,9 @@ checkHoles :: Day -> [EntryHeading] -> m [Day]
                |
              today
 
-* Events (check package fsnotify)
+* Events
 
-newEntry
-renamedEntry
+updatedEntry
 deletedEntry
 
 -}

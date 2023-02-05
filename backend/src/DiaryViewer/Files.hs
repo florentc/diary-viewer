@@ -2,12 +2,14 @@
 
 module DiaryViewer.Files where
 
-import Data.Maybe (fromJust)
+import Control.Concurrent (threadDelay)
+import Control.Monad (forever, void)
 import qualified Data.Text as Text
 import Data.Time (Day)
 import qualified Data.Time as Time
 import DiaryViewer.Diary
 import qualified System.Directory as Dir
+import qualified System.FSNotify as FSNotify
 import qualified System.FilePath.Posix as FilePath
 
 -- diaryPath :: IO FilePath
@@ -22,16 +24,16 @@ entriesPaths = Dir.listDirectory diaryPath
 parseDay :: String -> Maybe Day
 parseDay = Time.parseTimeM True Time.defaultTimeLocale "%Y-%m-%d"
 
-parseHeading :: String -> Maybe EntryHeading
-parseHeading str = do
-  let (dayStr, remainder) = splitAt 10 str
+parseHeading :: FilePath -> Maybe EntryHeading
+parseHeading path = do
+  let (dayStr, remainder) = splitAt 10 (FilePath.takeBaseName path)
   day <- parseDay dayStr
   case remainder of
     ' ' : title -> return $ EntryHeading day (Text.pack title)
     _ -> Nothing
 
 parseHeadings :: [FilePath] -> Maybe [EntryHeading]
-parseHeadings = mapM (parseHeading . FilePath.takeBaseName)
+parseHeadings = mapM parseHeading
 
 entryPath :: EntryHeading -> FilePath
 entryPath (EntryHeading day title) = diaryPath <> "/" <> show day <> " " <> Text.unpack title <> ".txt"
@@ -47,3 +49,28 @@ writeEntry (Entry heading content) = do
 
 readHeadings :: IO (Maybe [EntryHeading])
 readHeadings = parseHeadings <$> entriesPaths
+
+data DiaryEvent =
+  EntryUpdate EntryHeading
+  | EntryRemoval EntryHeading
+  deriving (Eq, Show)
+
+diaryEventFromFileEvent :: FSNotify.Event -> Maybe DiaryEvent
+diaryEventFromFileEvent (FSNotify.Added path _ _) =
+  EntryUpdate <$> parseHeading path
+diaryEventFromFileEvent (FSNotify.Modified path _ _) =
+  EntryUpdate <$> parseHeading path
+diaryEventFromFileEvent (FSNotify.Removed path _ _) =
+  EntryRemoval <$> parseHeading path
+diaryEventFromFileEvent _ = Nothing
+
+eventListeningExample :: IO ()
+eventListeningExample =
+  void . FSNotify.withManager $ \manager -> do
+    _ <-
+      FSNotify.watchDir
+        manager
+        diaryPath
+        (const True)
+        (print . diaryEventFromFileEvent)
+    forever $ threadDelay 10000

@@ -9,13 +9,13 @@ data EntryHeading = EntryHeading
   { entryDay :: Day,
     entryTitle :: Text
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 data Entry = Entry
   { entryHeading :: EntryHeading,
     entryContent :: Text
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 data TitleValidity
   = TitleEmpty
