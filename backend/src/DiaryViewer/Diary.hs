@@ -1,9 +1,12 @@
 module DiaryViewer.Diary where
 
+import Data.Ix (Ix)
+import qualified Data.Ix as Ix
+import qualified Data.List as List
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time (Day)
-import qualified Data.List as List
+import qualified Data.Time as Time
 
 data EntryHeading = EntryHeading
   { entryDay :: Day,
@@ -49,5 +52,16 @@ entryValidity :: Entry -> EntryValidity
 entryValidity (Entry (EntryHeading _ title) content) =
   (titleValidity title, contentValidity content)
 
-sortHeadings :: [EntryHeading] -> [EntryHeading]
-sortHeadings = List.sortOn entryDay
+clashes :: [EntryHeading] -> [[EntryHeading]]
+clashes =
+  filter ((> 1) . length)
+    . List.groupBy (\x y -> entryDay x == entryDay y)
+    . List.sortOn entryDay
+
+missingAmong :: (Ix a, Enum a) => [a] -> [a]
+missingAmong l =
+  case List.sort l of
+    [] -> []
+    x : xs -> concat . snd . List.foldl' f (x, []) $ xs
+  where
+    f (x1, hs) x2 = (x2, Ix.range (succ x1, pred x2) : hs)
