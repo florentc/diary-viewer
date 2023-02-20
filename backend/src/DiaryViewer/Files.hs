@@ -11,6 +11,7 @@ import DiaryViewer.Diary
 import qualified System.Directory as Dir
 import qualified System.FSNotify as FSNotify
 import qualified System.FilePath.Posix as FilePath
+import qualified Data.Maybe as Maybe
 
 -- diaryPath :: IO FilePath
 -- diaryPath = (<> "/diary") <$> Dir.getHomeDirectory
@@ -32,8 +33,8 @@ parseHeading path = do
     ' ' : title -> return $ EntryHeading day (Text.pack title)
     _ -> Nothing
 
-parseHeadings :: [FilePath] -> Maybe [EntryHeading]
-parseHeadings = mapM parseHeading
+parseHeadings :: [FilePath] -> [EntryHeading]
+parseHeadings = Maybe.mapMaybe parseHeading
 
 entryPath :: EntryHeading -> FilePath
 entryPath (EntryHeading day title) = diaryPath <> "/" <> show day <> " " <> Text.unpack title <> ".txt"
@@ -47,7 +48,7 @@ writeEntry :: Entry -> IO ()
 writeEntry (Entry heading content) = do
   writeFile (entryPath heading) (Text.unpack content)
 
-readHeadings :: IO (Maybe [EntryHeading])
+readHeadings :: IO [EntryHeading]
 readHeadings = parseHeadings <$> entriesPaths
 
 data DiaryEvent =

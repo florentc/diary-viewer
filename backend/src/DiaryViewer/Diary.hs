@@ -1,5 +1,8 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module DiaryViewer.Diary where
 
+import Data.Aeson
 import Data.Ix (Ix)
 import qualified Data.Ix as Ix
 import qualified Data.List as List
@@ -7,12 +10,15 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time (Day)
 import qualified Data.Time as Time
+import GHC.Generics
 
 data EntryHeading = EntryHeading
   { entryDay :: Day,
     entryTitle :: Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+
+instance ToJSON EntryHeading
 
 data Entry = Entry
   { entryHeading :: EntryHeading,

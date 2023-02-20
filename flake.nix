@@ -17,6 +17,7 @@
             pkgs.cabal-install
             pkgs.ormolu
             pkgs.hpack
+            pkgs.zlib
           ];
         };
       }

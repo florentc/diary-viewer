@@ -1,29 +1,27 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
+
 module DiaryViewer.Api where
 
-{-
-  
-* State
+import Data.Time (Day)
+import DiaryViewer.Diary
+import Servant
 
-diaryPath :: FilePath
+type Api =
+  "diaryPath" :> Get '[JSON] FilePath
+    :<|> "diaryPath" :> ReqBody '[JSON] FilePath :> Post '[JSON] (Either String FilePath)
+    :<|> "entry" :> QueryParam "day" Day :> Get '[JSON] (Either String Entry)
+    :<|> "entry" :> QueryParam "day" Day :> ReqBody '[JSON] Entry :> Post '[JSON] (Either String Entry)
+    :<|> "entries" :> Get '[JSON] (Either String [EntryHeading])
+    :<|> "clashes" :> Get '[JSON] (Either String [EntryHeading])
+    :<|> "holes" :> Get '[JSON] (Either String [EntryHeading])
 
-* Actions
+type ApiFoo =
+  "diaryPath" :> Get '[JSON] FilePath
+  :<|> "entries" :> Get '[JSON] [EntryHeading]
+  :<|> "clashes" :> Get '[JSON] [[EntryHeading]]
+  :<|> "missing" :> Get '[JSON] [Day]
 
-getDiaryPath :: m FilePath
-setDiaryPath :: FilePath -> m ()
-
-getEntries :: m (Either err [EntryHeading])
-readEntry :: EntryHeading -> m (Either err Entry)
-editEntry :: Entry -> m (Maybe err)
-entryValidity :: Entry -> m EntryValidity
-
-checkDateClashes :: [EntryHeading] -> m [EntryHeading]
-checkHoles :: Day -> [EntryHeading] -> m [Day]
-               |
-             today
-
-* Events
-
-updatedEntry
-deletedEntry
-
--}
+-- Events:
+-- updatedEntry
+-- deletedEntry

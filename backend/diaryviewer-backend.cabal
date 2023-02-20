@@ -13,6 +13,7 @@ library
       DiaryViewer.Api
       DiaryViewer.Diary
       DiaryViewer.Files
+      DiaryViewer.Server
   other-modules:
       Paths_diaryviewer_backend
   autogen-modules:
@@ -21,10 +22,13 @@ library
       src
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.9 && <5
+      aeson
+    , base >=4.9 && <5
     , directory
     , filepath
     , fsnotify
+    , servant-server
     , text
     , time
+    , warp
   default-language: Haskell2010

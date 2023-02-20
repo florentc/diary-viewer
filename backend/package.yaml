@@ -6,11 +6,14 @@ version: 0.0.0
 
 dependencies:
   - base >= 4.9 && < 5
+  - aeson
   - directory
   - filepath
   - fsnotify
   - text
+  - servant-server
   - time
+  - warp
 
 library:
   source-dirs: src
