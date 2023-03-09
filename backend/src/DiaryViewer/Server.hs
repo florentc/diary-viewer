@@ -7,18 +7,20 @@ import DiaryViewer.Files
 import Network.Wai.Handler.Warp
 import Control.Monad.IO.Class (liftIO)
 
-server :: Server ApiFoo
+server :: Server Api
 server =
   return diaryPath
   :<|> liftIO readHeadings
   :<|> (clashes <$> liftIO readHeadings)
   :<|> (missingAmong . map entryDay <$> liftIO readHeadings)
+  :<|> liftIO . queryDay
+  :<|> liftIO . writeEntry
 
-apiFoo :: Proxy ApiFoo
-apiFoo = Proxy
+api :: Proxy Api
+api = Proxy
 
 app :: Application
-app = serve apiFoo server
+app = serve api server
 
 main :: IO ()
 main = run 8001 app 

@@ -9,7 +9,6 @@ import qualified Data.List as List
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time (Day)
-import qualified Data.Time as Time
 import GHC.Generics
 
 data EntryHeading = EntryHeading
@@ -19,12 +18,16 @@ data EntryHeading = EntryHeading
   deriving (Eq, Show, Generic)
 
 instance ToJSON EntryHeading
+instance FromJSON EntryHeading
 
 data Entry = Entry
   { entryHeading :: EntryHeading,
     entryContent :: Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+
+instance ToJSON Entry
+instance FromJSON Entry
 
 data TitleValidity
   = TitleEmpty

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module DiaryViewer.Files where
 
@@ -12,12 +13,14 @@ import qualified System.Directory as Dir
 import qualified System.FSNotify as FSNotify
 import qualified System.FilePath.Posix as FilePath
 import qualified Data.Maybe as Maybe
+import GHC.Generics
+import Data.Aeson (ToJSON)
 
 -- diaryPath :: IO FilePath
 -- diaryPath = (<> "/diary") <$> Dir.getHomeDirectory
 
 diaryPath :: FilePath
-diaryPath = "/home/private/diary"
+diaryPath = "diary"
 
 entriesPaths :: IO [FilePath]
 entriesPaths = Dir.listDirectory diaryPath
@@ -50,6 +53,21 @@ writeEntry (Entry heading content) = do
 
 readHeadings :: IO [EntryHeading]
 readHeadings = parseHeadings <$> entriesPaths
+
+data QueryDayFailure =
+    QueryDayNotFound
+    | QueryDayDuplicates [EntryHeading]
+  deriving (Eq, Show, Generic)
+
+instance ToJSON QueryDayFailure
+
+queryDay :: Day -> IO (Either QueryDayFailure Entry)
+queryDay day = do
+    headings <- readHeadings
+    case filter ((== day) . entryDay) headings of
+        [heading] -> Right <$> readEntry heading
+        [] -> return . Left $ QueryDayNotFound
+        duplicates -> return . Left $ QueryDayDuplicates duplicates
 
 data DiaryEvent =
   EntryUpdate EntryHeading
