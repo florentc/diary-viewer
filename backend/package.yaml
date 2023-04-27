@@ -12,8 +12,11 @@ dependencies:
   - fsnotify
   - text
   - servant-server
+  - servant-websockets
   - time
+  - wai-cors
   - warp
+  - websockets
 
 library:
   source-dirs: src
@@ -22,3 +25,9 @@ library:
     -threaded
     -rtsopts
     -with-rtsopts=-N
+
+executable:
+  source-dirs: app
+  main: Main.hs
+  dependencies:
+    diaryviewer-backend

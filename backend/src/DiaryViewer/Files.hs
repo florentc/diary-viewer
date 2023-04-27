@@ -72,7 +72,9 @@ queryDay day = do
 data DiaryEvent =
   EntryUpdate EntryHeading
   | EntryRemoval EntryHeading
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
+
+instance ToJSON DiaryEvent
 
 diaryEventFromFileEvent :: FSNotify.Event -> Maybe DiaryEvent
 diaryEventFromFileEvent (FSNotify.Added path _ _) =
@@ -83,13 +85,13 @@ diaryEventFromFileEvent (FSNotify.Removed path _ _) =
   EntryRemoval <$> parseHeading path
 diaryEventFromFileEvent _ = Nothing
 
-eventListeningExample :: IO ()
-eventListeningExample =
+watchFileEvents :: (DiaryEvent -> IO ()) -> IO ()
+watchFileEvents onFileEvent =
   void . FSNotify.withManager $ \manager -> do
     _ <-
       FSNotify.watchDir
         manager
         diaryPath
         (const True)
-        (print . diaryEventFromFileEvent)
+        (mapM_ onFileEvent . diaryEventFromFileEvent)
     forever $ threadDelay 10000

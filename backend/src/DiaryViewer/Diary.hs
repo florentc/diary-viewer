@@ -18,6 +18,7 @@ data EntryHeading = EntryHeading
   deriving (Eq, Show, Generic)
 
 instance ToJSON EntryHeading
+
 instance FromJSON EntryHeading
 
 data Entry = Entry
@@ -27,7 +28,19 @@ data Entry = Entry
   deriving (Eq, Show, Generic)
 
 instance ToJSON Entry
+
 instance FromJSON Entry
+
+data Diary = Diary
+  { diaryEntryHeadings :: [EntryHeading],
+    diaryClashes :: [[EntryHeading]],
+    diaryMissingDays :: [Day]
+  }
+  deriving (Eq, Show, Generic)
+
+instance ToJSON Diary
+
+instance FromJSON Diary
 
 data TitleValidity
   = TitleEmpty

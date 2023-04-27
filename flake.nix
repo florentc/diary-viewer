@@ -12,12 +12,18 @@
         formatter = pkgs.nixfmt;
         devShells.default = pkgs.mkShell {
           buildInputs = [
+            # Haskell
             haskellpkgs.ghc
             haskellpkgs.haskell-language-server
             pkgs.cabal-install
             pkgs.ormolu
             pkgs.hpack
             pkgs.zlib
+
+            # Javascript
+            pkgs.yarn
+            pkgs.nodePackages.npm
+            pkgs.nodePackages.typescript-language-server
           ];
         };
       }
