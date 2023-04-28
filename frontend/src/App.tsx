@@ -206,7 +206,7 @@ let didInit = false;
 
 function App() {
 
-  const [diary, setDiary] = useState<Diary>(exampleDiary);
+  const [diary, setDiary] = useState<Diary | null>(exampleDiary);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [errors, setErrors] = useState<Error[]>([]);
   const [serverSocket, setServerSocket] = useState<WebSocket | null>(null);
@@ -218,9 +218,9 @@ function App() {
         setDiary(data);
       })
       .catch(err => {
-        addError(Date.now(), 'Could not refresh diary', err.message);
+        addError('Could not refresh diary', err.message);
       })
-  }, [])
+  }, [errors])
 
   const selectEntry = useCallback(
     (day: Day) => {
@@ -232,37 +232,49 @@ function App() {
             setSelectedEntry(data.Right ? data.Right : null);
           } else {
             if (data.Left) {
-              addError(Date.now(), data.Left.tag);
+              addError(data.Left.tag);
             }
           }
         })
         .catch(err => {
-          addError(Date.now(), 'Could not access entry ' + day, err.message);
+          addError('Could not access entry ' + day, err.message);
         });
-    },
-    []
+    }, [errors]
   );
 
-  function addError(time: number, title: string, description?: string) {
-    setErrors([...errors, { time: time, title: title, description: description }]);
-  };
+  const addError = useCallback(
+    (title: string, description?: string) => {
+      setErrors([...errors, { time: Date.now(), title: title, description: description }]);
+    }, [errors]
+  );
 
-  function closeError(errorTime: ErrorTime) {
-    setErrors(errors.filter(error => error.time !== errorTime));
-  }
+  const closeError = useCallback(
+    (errorTime: ErrorTime) => {
+      setErrors(errors.filter(error => error.time !== errorTime));
+    }, [errors]
+  );
 
-  function connectToServer() {
-    const socket = new WebSocket('ws://localhost:8001/updates');
-    if (serverSocket) {
-      serverSocket.close();
-    }
-    socket.onopen = _ => setServerSocket(socket);
-    socket.onmessage = event => console.log('Message from server ', event.data);
-    socket.onclose = _ => setServerSocket(null);
-    socket.onerror = event => console.log('Socket connection error', event);
-  }
+  const onSocketMessage = useCallback(
+    () => {
+      refreshDiary();
+      if (selectedEntry) {
+        selectEntry(selectedEntry.entryHeading.entryDay);
+      }
+    }, [selectedEntry, selectEntry]);
 
-  // useEffect(refreshDiary, []);
+  const connectToServer = useCallback(
+    () => {
+      const socket = new WebSocket('ws://localhost:8001/updates');
+      if (serverSocket) {
+        serverSocket.close();
+      }
+      socket.onopen = _ => setServerSocket(socket);
+      socket.onmessage = onSocketMessage;
+      socket.onclose = _ => setServerSocket(null);
+      socket.onerror = event => console.log('Socket connection error', event);
+    }, [serverSocket, onSocketMessage]);
+
+  // Initialization: Fetch data and create web socket
   useEffect(() => {
     if (!didInit) {
       didInit = true;
@@ -271,12 +283,21 @@ function App() {
     }
   }, []);
 
+
+  // Upon receiving a message on the socket, the selected entry has to be refreshed.
+  // The handler for the onmessage event has to be re-evaluated and re-assigned. 
+  useEffect(() => {
+    if (serverSocket) {
+      serverSocket.onmessage = onSocketMessage;
+    }
+  }, [selectedEntry]);
+
   return (
     <div className="App">
       <ConnectionStatus connected={serverSocket !== null} onRetry={connectToServer} />
       {errors.length > 0 ? <Errors errors={errors} onCloseError={closeError} /> : null}
       <Refresh onRefresh={refreshDiary} />
-      <Diary diary={diary} onSelect={selectEntry} selectedEntry={selectedEntry} />
+      {diary ? <Diary diary={diary} onSelect={selectEntry} selectedEntry={selectedEntry} /> : null}
       {selectedEntry ? <EntryViewer entry={selectedEntry} /> : null}
     </div>
   )
