@@ -13,7 +13,7 @@ A frontend (in `frontend`) provides a React + Material UI user interface. It is 
 
 # Setup
 
-1. Have `nix` with flakes enabled
+1. Have `nix` with flakes enabled (if not, install the dependencies mentionned in `flake.nix` manually and skip step 2)
 2. Enter the dev shell with `nix develop`
 3. In `backend`
     * Generate the cabal file with `hpack`
