@@ -1,5 +1,38 @@
 import { useState, useCallback, useEffect } from 'react'
+import Button from '@mui/material/Button'
 import './App.css'
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Container from '@mui/material/Container';
+import AppBar from '@mui/material/AppBar';
+import Typography from '@mui/material/Typography';
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import CssBaseline from '@mui/material/CssBaseline';
+import TableContainer from '@mui/material/TableContainer';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import TableBody from '@mui/material/TableBody';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Grid from '@mui/material/Unstable_Grid2';
+import Divider from '@mui/material/Divider';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import Fade from '@mui/material/Fade';
+import Skeleton from '@mui/material/Skeleton';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 type Day = string;
 
@@ -29,40 +62,43 @@ type Error = {
   description?: string;
 }
 
-function Entries(props: { entryHeadings: EntryHeading[], selectedEntryDay: Day | null, onSelect: (_: EntryHeading) => void }) {
+function Entries(props: { entryHeadings: EntryHeading[], selectedEntryDay: Day | null, onSelect: (_: EntryHeading) => void, onRefresh: () => void }) {
   const [recentFirst, setRecentFirst] = useState(true)
   return (
     <div className="entries">
-      <h2>Entries</h2>
       {props.entryHeadings ?
-        <table>
-          <thead>
-            <tr>
-              <th>
-                Date
-                <button onClick={() => setRecentFirst(!recentFirst)}>
-                  {recentFirst ? "⬆️" : "⬇️ "}
-                </button>
-              </th>
-              <th>Title</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {props.entryHeadings
-              .sort((e1, e2) =>
-                (recentFirst ? -1 : 1) *
-                e1.entryDay.localeCompare(e2.entryDay)
-              )
-              .map(entryHeading =>
-                <EntryHeading
-                  key={entryHeading.entryDay + entryHeading.entryTitle}
-                  isSelected={props.selectedEntryDay === entryHeading.entryDay}
-                  onSelect={props.onSelect}
-                  entryHeading={entryHeading} />
-              )}
-          </tbody>
-        </table> :
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  Date
+                  <TableSortLabel
+                    active={true}
+                    direction={recentFirst ? 'desc' : 'asc'}
+                    onClick={() => setRecentFirst(!recentFirst)}
+                  >
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>Title</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {props.entryHeadings
+                .sort((e1, e2) =>
+                  (recentFirst ? -1 : 1) *
+                  e1.entryDay.localeCompare(e2.entryDay)
+                )
+                .map(entryHeading =>
+                  <EntryHeading
+                    key={entryHeading.entryDay + entryHeading.entryTitle}
+                    isSelected={props.selectedEntryDay === entryHeading.entryDay}
+                    onSelect={props.onSelect}
+                    entryHeading={entryHeading} />
+                )}
+            </TableBody>
+          </Table>
+        </TableContainer> :
         <p>Loading...</p>
       }
     </div>
@@ -71,21 +107,31 @@ function Entries(props: { entryHeadings: EntryHeading[], selectedEntryDay: Day |
 
 function EntryHeading(props: { entryHeading: EntryHeading, isSelected: boolean, onSelect: (_: EntryHeading) => void }) {
   return (
-    <tr
-      className={`entry-row ${props.isSelected ? "selected" : ""}`}
+    <TableRow
+      selected={props.isSelected}
+      hover={true}
       onClick={() => props.onSelect(props.entryHeading)}>
-      <td>{props.entryHeading.entryDay}</td>
-      <td>{props.entryHeading.entryTitle}</td>
-    </tr>
+      <TableCell>{props.entryHeading.entryDay}</TableCell>
+      <TableCell>{props.entryHeading.entryTitle}</TableCell>
+    </TableRow>
   );
 }
 
 function EntryViewer(props: { entry: Entry }) {
   return (
-    <div className="entry-content">
-      <h2>{props.entry.entryHeading.entryTitle}</h2>
-      <p>{props.entry.entryContent}</p>
-    </div>
+    <Card className="entry-content">
+      <CardContent>
+        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+          {props.entry.entryHeading.entryDay}
+        </Typography>
+        <Typography variant="h5" component="div">
+          {props.entry.entryHeading.entryTitle}
+        </Typography>
+        <Typography variant="body2">
+          {props.entry.entryContent}
+        </Typography>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -108,27 +154,37 @@ function Clashes(props: { clashes: Clash[] }) {
       </div>);
   }
   return (
-    <div className="clashes">
-      <h2>Conflicting entries</h2>
-      {props.clashes.map(Clash)}
-    </div>
+    <Card className="clashes">
+      <CardContent>
+        <Typography variant="h5" color="text.secondary">Conflicting entries</Typography>
+        <List>
+          {props.clashes.map(Clash)}
+        </List>
+      </CardContent>
+    </Card>
   );
 }
 
 function Missing(props: { missingDays: Day[] }) {
   return (
-    <div className="missing">
-      <h2>Missing Entries</h2>
-      <ul>
-        {props.missingDays.map(day =>
-          <li key={day}>{day}</li>
-        )}
-      </ul>
-    </div>
+    <Accordion className="missing">
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        >
+        <Typography>Missing Entries</Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <List>
+          {props.missingDays.map(day =>
+            <ListItem key={day}>{day}</ListItem>
+          )}
+        </List>
+      </AccordionDetails>
+    </Accordion>
   );
 }
 
-function Diary(props: { diary: Diary, selectedEntry: Entry | null, onSelect: (_: Day) => void }) {
+function Diary(props: { diary: Diary, selectedEntry: Entry | null, onSelect: (_: Day) => void, onRefresh: () => void }) {
   if (!props.diary) {
     return (<div className="diary">Loading...</div>);
   }
@@ -137,15 +193,20 @@ function Diary(props: { diary: Diary, selectedEntry: Entry | null, onSelect: (_:
     <Entries
       entryHeadings={props.diary.diaryEntryHeadings}
       selectedEntryDay={props.selectedEntry ? props.selectedEntry.entryHeading.entryDay : null}
-      onSelect={(entryHeading) => props.onSelect(entryHeading.entryDay)} />;
+      onSelect={(entryHeading) => props.onSelect(entryHeading.entryDay)}
+      onRefresh={props.onRefresh}
+    />;
   const clashes = <Clashes clashes={props.diary.diaryClashes} />;
   return (
     <div className="diary">
+      <Refresh onRefresh={props.onRefresh} />
       {
         props.diary.diaryClashes.length === 0 ?
           <>
-            {entries}
-            {missing}
+            <Stack spacing={4}>
+              {entries}
+              {missing}
+            </Stack>
           </> :
           clashes
       }
@@ -154,50 +215,57 @@ function Diary(props: { diary: Diary, selectedEntry: Entry | null, onSelect: (_:
 }
 
 function Refresh(props: { onRefresh: () => void }) {
-  return <button className="refresh" onClick={props.onRefresh}>Refresh</button>;
+  return (
+    <Button
+      className="refresh"
+      startIcon={<RefreshIcon />}
+      onClick={props.onRefresh}
+    >
+      Refresh
+    </Button>
+  );
 }
 
 function Error(props: { error: Error, onCloseError: () => void }) {
   return (
-    <div className="error">
-      <div className="error-title">
+    <Alert severity="error" onClose={props.onCloseError} >
+      <AlertTitle>
         {props.error.title}
-      </div>
+      </AlertTitle>
       {props.error.description ?
-        <div className="error-description">
+        <>
           {props.error.description}
-        </div> :
+        </> :
         null
       }
-      <button
-        className="error-close"
-        onClick={props.onCloseError}
-      >
-        Close
-      </button>
-    </div>
+    </Alert>
   );
 }
 
 function Errors(props: { errors: Error[], onCloseError: (_: ErrorTime) => void }) {
   return (
-    <div className="errors">
+    <>
       {props.errors.map(error =>
         <Error
           key={error.time}
           error={error}
           onCloseError={() => props.onCloseError(error.time)}
         />)}
-    </div>
+    </>
   );
 }
 
 function ConnectionStatus(props: { connected: boolean, onRetry: () => void }) {
   return (!props.connected ?
-    <div className="connection-status">
-      <p>Disconnected from the server</p>
-      <button onClick={props.onRetry}>Retry</button>
-    </div>
+    <Alert
+      severity="warning"
+      className="connection-status"
+      action={
+        <Button color="inherit" onClick={props.onRetry}>Retry</Button>
+      }
+    >
+      <AlertTitle>Disconnected from the server</AlertTitle>
+    </Alert>
     : null
   );
 }
@@ -206,7 +274,7 @@ let didInit = false;
 
 function App() {
 
-  const [diary, setDiary] = useState<Diary | null>(exampleDiary);
+  const [diary, setDiary] = useState<Diary | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [errors, setErrors] = useState<Error[]>([]);
   const [serverSocket, setServerSocket] = useState<WebSocket | null>(null);
@@ -293,16 +361,33 @@ function App() {
   }, [selectedEntry]);
 
   return (
-    <div className="App">
-      <ConnectionStatus connected={serverSocket !== null} onRetry={connectToServer} />
-      {errors.length > 0 ? <Errors errors={errors} onCloseError={closeError} /> : null}
-      <Refresh onRefresh={refreshDiary} />
-      {diary ? <Diary diary={diary} onSelect={selectEntry} selectedEntry={selectedEntry} /> : null}
-      {selectedEntry ? <EntryViewer entry={selectedEntry} /> : null}
-    </div>
+    <>
+      <CssBaseline />
+      <AppBar position='sticky' sx={{ padding: '1em', marginBottom: '1em' }}>
+        <Typography variant="h6" component="div">
+          diary-viewer
+        </Typography>
+      </AppBar>
+      <Container>
+        <Grid container spacing={4}>
+          <Grid xs={12}>
+            <Stack spacing={1}>
+              <ConnectionStatus connected={serverSocket !== null} onRetry={connectToServer} />
+              {errors.length > 0 ? <Errors errors={errors} onCloseError={closeError} /> : null}
+            </Stack>
+          </Grid>
+          <Grid xs={12} sm={12} md={4}>
+            {diary ?
+              <Diary diary={diary} onSelect={selectEntry} onRefresh={refreshDiary} selectedEntry={selectedEntry} /> :
+              null}
+          </Grid>
+          <Grid xs={12} sm={12} md={8}>
+            {selectedEntry ? <EntryViewer entry={selectedEntry} /> : null}
+          </Grid>
+        </Grid>
+      </Container>
+    </>
   )
 }
 
 export default App
-
-const exampleDiary = { "diaryClashes": [[{ "entryDay": "2023-01-02", "entryTitle": "Day2Duplicate" }, { "entryDay": "2023-01-02", "entryTitle": "Day2" }], [{ "entryDay": "2023-01-08", "entryTitle": "Day8foo" }, { "entryDay": "2023-01-08", "entryTitle": "Day8bar" }]], "diaryEntryHeadings": [{ "entryDay": "2023-01-05", "entryTitle": "Day5" }, { "entryDay": "2023-01-02", "entryTitle": "Day2Duplicate" }, { "entryDay": "2023-01-01", "entryTitle": "Day1" }, { "entryDay": "2023-01-03", "entryTitle": "Day3" }, { "entryDay": "2023-01-02", "entryTitle": "Day2" }], "diaryMissingDays": ["2023-01-04"] };

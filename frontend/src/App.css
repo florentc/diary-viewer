@@ -1,7 +1,0 @@
-tr.entry-row:hover {
-  background: yellow;
-  cursor: pointer;
-}
-tr.entry-row.selected {
-  background: lime;
-}
