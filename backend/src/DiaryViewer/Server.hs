@@ -1,4 +1,3 @@
-{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module DiaryViewer.Server where
@@ -38,18 +37,6 @@ streamUpdates c =
       10
       (return ())
       (watchFileEvents (WebSockets.sendTextData c . Aeson.encode . Aeson.toJSON))
-      -- ( forM_
-      --     [1 ..]
-      --     ( \i ->
-      --         WebSockets.sendTextData
-      --           c
-      --           (Text.pack $ "Hello " <> show (i :: Int))
-      --           >> threadDelay 4_000_000
-      --     )
-      -- )
-
--- liftIO . forM_ [1..] $ \i -> do
---        WebSockets.sendTextData c "hello" >> threadDelay 1000000
 
 api :: Proxy Api
 api = Proxy

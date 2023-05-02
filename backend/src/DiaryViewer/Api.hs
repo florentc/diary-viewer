@@ -18,7 +18,3 @@ type Api =
     :<|> "entry" :> Capture "day" Day :> Get '[JSON] (Either QueryDayFailure Entry)
     :<|> "entry" :> ReqBody '[JSON] Entry :> Post '[JSON] ()
     :<|> "updates" :> WebSocket
-
--- Events:
--- updatedEntry
--- deletedEntry
